@@ -125,3 +125,5 @@ hs_err_pid*
 gradlew
 gradlew.bat
 settings.gradle
+src/main/resources/
+src/test/
