@@ -2,7 +2,7 @@ import org.junit.Test;
 
 import java.util.LinkedList;
 
-public class LeeCode4 {
+public class LeetCode4 {
 	private double getSingleArrayMidle(int[] nums2, boolean isSingle){
 		if (isSingle){
 			return nums2[nums2.length>>1];
