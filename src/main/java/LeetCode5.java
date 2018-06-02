@@ -1,5 +1,8 @@
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
 public class LeetCode5 {
     /**
      * dp解法：
@@ -44,65 +47,101 @@ public class LeetCode5 {
         return s.substring(start, start + maxLength);
     }
 
+    private String getChildStr(String s, int pre, int aft) {
+        int len = s.length();
+        while (pre >= 0 && aft < len && s.charAt(pre) == s.charAt(aft)) {
+            pre--;
+            aft++;
+        }
+
+        return s.substring(pre + 1, aft);
+    }
+
     /**
      * 中心拓展法：
-     *  选定一个字符，往两边拓展更新最长子串
-     *  需要注意 aba  abba这两种形式的情况
+     * 选定一个字符，往两边拓展更新最长子串
+     * 需要注意 aba  abba这两种形式的情况
+     *
      * @param s 字符串
      * @return 最长回文串
      */
     public String longestPalindrome1(String s) {
-        int start = 0;
-        int maxLength = 1;
-
-        for (int i = 0; i < s.length(); i++) {
-            int pre = i - 1;
-            int aft = i + 1;
-            int curLength = 1;
-            // aba形式回文串
-            while (pre >= 0 && aft < s.length()) {
-                if (s.charAt(pre) == s.charAt(aft)) {
-                    curLength += 2;
-                    if (curLength > maxLength) {
-                        maxLength = curLength;
-                        start = pre;
-                    }
-                    pre--;
-                    aft++;
-                } else {
-                    break;
-                }
+        int len = s.length();
+        if (len < 2) {
+            return s;
+        }
+        String rs = "";
+        for (int i = 1; i < len; i++) {
+            //判断aba情况
+            String temp = getChildStr(s, i, i);
+            if (temp.length() > rs.length()) {
+                rs = temp;
             }
-            //abba形式回文串
-            if (i - 1 >= 0 && s.charAt(i) == s.charAt(i - 1)) {
-                pre = i - 2;
-                aft = i + 1;
-                curLength = 2;
-                if (curLength > maxLength) {
-                    maxLength = curLength;
-                    start = pre + 1;
-                }
-                while (pre >= 0 && aft < s.length()) {
-                    if (s.charAt(pre) == s.charAt(aft)) {
-                        curLength += 2;
-                        if (curLength > maxLength) {
-                            maxLength = curLength;
-                            start = pre;
-                        }
-                        pre--;
-                        aft++;
-                    } else {
-                        break;
-                    }
-                }
+            //判断abba情况
+            temp = getChildStr(s, i - 1, i);
+            if (temp.length() > rs.length()) {
+                rs = temp;
             }
         }
-        return s.substring(start, start + maxLength);
+        return rs;
+    }
+
+    /**
+     * Manacher算法
+     * @param s 字符串
+     * @return 最长回文子串
+     */
+    public String longestPalindrome2(String s) {
+        //字符串预处理  aaa ==> $a#a#a#
+        StringBuilder tempStr = new StringBuilder("$");
+        for (int i = 0; i < s.length(); ++i) {
+            tempStr.append(s.charAt(i)).append("#");
+        }
+        tempStr.append("\0");
+        s = tempStr.toString();
+
+        //用StringBuilder比较好   这里偷懒写法
+//        s = Arrays.stream(s.split("")).reduce("$", (pre, next)->pre+next+"#") + "\0";
+
+        int[] dp = new int[s.length()];
+
+        int maxLength = 1;
+        int start = 1;
+        int id = 0;
+        int mx = 0;
+
+        int sLen = s.length() - 1;
+        for (int i = 1; i < sLen; ++i) {
+            //如果在mx（在回文串内或者刚好在边界）范围内  取dp[i] = Math.min(dp[2 * id - i], mx - i) 否则dp[i]=1
+            if (i < mx) {
+                dp[i] = Math.min(dp[2 * id - i], mx - i);
+            } else {
+                dp[i] = 1;
+            }
+
+            //刚好在边界  或者边界以外 需要往外扩张
+            while (s.charAt(i - dp[i]) == s.charAt(i + dp[i])) {
+                dp[i]++;
+            }
+
+            //如果mx最大值右移了  更新mx和id
+            if (mx < i + dp[i]) {
+                id = i;
+                mx = i + dp[i];
+            }
+
+            //更新最长回文串
+            if (maxLength < dp[i]) {
+                maxLength = dp[i];
+                start = i;
+            }
+        }
+        return s.substring(start - maxLength + 1, start + maxLength).replaceAll("$|#", "");
     }
 
     @Test
     public void test() {
         String s = "aaaa";
-        System.out.println(longestPalindrome(s));
+        System.out.println(longestPalindrome2(s));
     }
 }
