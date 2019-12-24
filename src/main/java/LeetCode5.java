@@ -92,6 +92,9 @@ public class LeetCode5 {
      * @return 最长回文子串
      */
     public String longestPalindrome2(String s) {
+        if ("".equals(s)) {
+            return "";
+        }
         //字符串预处理  aaa ==> $a#a#a#
         StringBuilder tempStr = new StringBuilder("$");
         for (int i = 0; i < s.length(); ++i) {
